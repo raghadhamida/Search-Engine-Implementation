@@ -1,0 +1,14 @@
+html
+    head
+        title Search
+    body 
+        h1 Search #{web}
+        p Search by Key Words:
+            input(type="text", id="searchName") 
+        p Boosting(True/False):
+            input(type="text", id="boost") 
+        p Limit the Results (min 1, max 50, default 10):
+            input(type="text", id="limit") 
+        button(type="button" id="button") Search
+        br
+        script(src="/client.js")
