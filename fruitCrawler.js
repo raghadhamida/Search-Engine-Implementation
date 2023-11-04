@@ -10,6 +10,9 @@ import elasticlunr from 'elasticlunr';
 const index = elasticlunr(function () {
     this.addField('title');
     this.addField('content');
+    this.addField('url');
+    this.addField('pr');
+    this.addField('searchScore');
     this.setRef('id');
 });
 
@@ -81,7 +84,8 @@ const c = new crawler({
                     index.addDoc({
                         id: updatedPage._id,  // Using the database ID as the reference
                         title: title,
-                        content: content
+                        content: content,
+                        url: url
                     });
                     
                     //console.log("Page updated:", updatedPage);
