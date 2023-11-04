@@ -71,44 +71,39 @@ app.get("/search", async (req, res, next) => {
             const additionalResults = index.search(searchQuery, {}).slice(limit, limit + numberOfResultsToFetch);
             indexResults = indexResults.concat(additionalResults);
         }
-        console.log(indexResults);
-        if (boost) {
-            // Sort the indexResults based on the combined score of index and pagerank
-            indexResults.sort(async (a, b) => {
-                const pageA = await Pages.findById(a.ref);
-                const pageB = await Pages.findById(b.ref);
-                //console.log(pageA);
-                //console.log(pageA.pr);
-                
-                // Calculate combined score (index score * pagerank)
-                const scoreA = a.score * pageA.pr;
-                const scoreB = b.score * pageB.pr;
-                //console.log(a.score);
-                //console.log(scoreA);
-                
-                // Sort in descending order
-                return scoreB - scoreA;
-            });
-        }
 
         let modifiedResults = indexResults.map(async (indexResult) => {
             try {
                 let page = await Pages.findById(indexResult.ref);
-                indexResult.title = page.title;
-                indexResult.content = page.content;
-                return indexResult;
+                let searchScore = boost ? indexResult.score * page.pr : indexResult.score;
+
+                return {
+                    title: page.title,
+                    content: page.content,
+                    pr: page.pr,
+                    searchScore: searchScore,
+                    score: indexResult.score, // Add the normal score for reference
+                };
             } catch (err) {
                 console.log("Error finding document with query result ID: " + err);
                 throw err; // Propagate the error to be caught by the catch block below
             }
         });
 
-        //let topPages = await Promise.all(modifiedResults);
-        //console.log(modifiedResults);
-        // res.format({
-        //     "text/html": () => {res.status(200).render("searchResults.pug", {results: modifiedResults})},
-        //     "application/json": () => {res.status(200).json(results)}
-        // });
+        let finalResults = await Promise.all(modifiedResults);
+
+        // Sort finalResults based on searchScore if boost is true, otherwise sort based on score
+        if (boost) {
+            finalResults.sort((a, b) => b.searchScore - a.searchScore);
+        } else {
+            finalResults.sort((a, b) => b.score - a.score);
+        }
+        
+        console.log(finalResults);
+        res.format({
+            "text/html": () => {res.status(200).render("searchResults.pug", {results: finalResults})},
+            "application/json": () => {res.status(200).json(results)}
+        });
     } catch (err) {
         console.log("Error processing search request: " + err);
         res.status(500).send('Internal server error.');
