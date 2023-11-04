@@ -102,7 +102,7 @@ app.get("/search", async (req, res, next) => {
         console.log(finalResults);
         res.format({
             "text/html": () => {res.status(200).render("searchResults.pug", {results: finalResults})},
-            "application/json": () => {res.status(200).json(results)}
+            "application/json": () => {res.status(200).json(finalResults)}
         });
     } catch (err) {
         console.log("Error processing search request: " + err);
