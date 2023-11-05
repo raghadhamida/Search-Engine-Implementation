@@ -18,6 +18,7 @@ const index2 = elasticlunr(function () {
 
 let crawledPages = new Set();
 let pagesQueue = new Set();
+let crawledCount = 0;
 
 
 //importing collections
@@ -41,8 +42,7 @@ const c2 = new crawler({
             if (crawledPages.has(url)){ //this page has been visited before, so skip it 
                 //console.log("Visited this page before: " + url );
                 return;
-            }else{ //this means that the page hasn't been visited before, so extract and process data 
-                
+            }else{ //this means that the page hasn't been visited before, so extract and process data
                 crawledPages.add(url);
                 let $ = res.$; //get cheerio data, see cheerio docs for info
                 let content = $('#bodyContent p').text().replace(/\n/g, '').trim();
@@ -61,7 +61,7 @@ const c2 = new crawler({
 
 
                 for (const outgoingLink of outgoingLinks) {
-                    if (pagesQueue.size < 20 && pagesQueue.has(outgoingLink)==false){
+                    if (pagesQueue.size < 9 && !pagesQueue.has(outgoingLink) && outgoingLink != main){
                         //console.log("Outgoinglink is added to queue: " + outgoingLink);
                         c2.queue(outgoingLink);
                         pagesQueue.add(outgoingLink);
@@ -79,7 +79,6 @@ const c2 = new crawler({
                 }
     
                 try {
-                    console.log(c2.queue);
                     const updatedPage = await Pages2.findOneAndUpdate(
                         { url: url },
                         { $set: { title: title, content: content, outGoingLinks: outgoingLinks } },
@@ -94,25 +93,21 @@ const c2 = new crawler({
                     });
                     
                     //console.log("Page updated:", updatedPage);
-
-                    if(crawledPages.size >= 20){
-                        console.log("STOP");
-                    }
                 } catch (err) {
                     console.log("Error creating/updating document for " + url + ": " + err);
                 }
 
-                //clean up db 
-                if (crawledPages.size == 600){
-                    console.log("Crawling done.");
-                    Pages2.deleteMany({ title: { $in: [null, ""] } })
-                    .then(deletedDocs => {
-                        console.log("Deleted " + deletedDocs.deletedCount + " wikis without a title.");
-                    })
-                    .catch(err => {
-                        console.error('Error deleting wikis without a title:', err);
-                    });
-                }
+                // //clean up db 
+                // if (crawledPages.size == 600){
+                //     console.log("Crawling done.");
+                //     Pages2.deleteMany({ title: { $in: [null, ""] } })
+                //     .then(deletedDocs => {
+                //         console.log("Deleted " + deletedDocs.deletedCount + " wikis without a title.");
+                //     })
+                //     .catch(err => {
+                //         console.error('Error deleting wikis without a title:', err);
+                //     });
+                // }
 
             }
             
