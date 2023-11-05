@@ -15,7 +15,8 @@
     "scripts": {
         "db-init": "node database-init.js",
         "fruitCrawler": "node fruitCrawler.js",
+        "webCrawler": "node webCrawler.js",
         "server": "node server.js",
-        "start": "npm run -s db-init & npm run -s fruitCrawler & npm run -s server"
+        "start": "npm run -s db-init & npm run -s fruitCrawler & npm run -s webCrawler & npm run -s server"
     }
 }

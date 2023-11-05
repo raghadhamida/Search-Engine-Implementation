@@ -6,7 +6,10 @@ const port = 3001;
 
 import session from 'express-session';
 import { default as connectMongoDBSession} from 'connect-mongodb-session';
+//Fruit crawel variables
 import { c, Pages, generateAdjacencyMatrix, calculatePageRank, index } from './fruitCrawler.js';
+//Wiki Crawler variables
+import { c2, Pages2, generateAdjacencyMatrix2, calculatePageRank2, index2 } from './webCrawler.js';
 
 const MongoDBStore = connectMongoDBSession(session);
 
@@ -49,9 +52,11 @@ app.use(express.json());
 
 
 
-//Queue a URL, which starts the crawl
+//Queue a URL, which starts the crawl FRUITS
 c.queue('https://people.scs.carleton.ca/~davidmckenney/fruitgraph/N-0.html');
 
+//Queue a URL, which starts the crawl WIKI
+c2.queue("https://en.wikipedia.org/wiki/Jordan");
 
 //serve GET request for /fruits
 app.get("/fruits", async (req, res, next) => {
@@ -137,6 +142,7 @@ app.get("/fruitpage", async (req, res) => {
     }
 });
 
+//Fruit drain
 c.on('drain',async function(){
     console.log("\n CRAWLING COMPLETED. \n");
 
@@ -168,6 +174,43 @@ c.on('drain',async function(){
 
 
 
+    // // Start the express server after crawling and PageRank calculation is completed
+    // app.listen(port);
+    // console.log("Listening on port 3001.");
+});
+
+//Wiki drain
+c2.on('drain',async function(){
+    console.log("\n WIKI CRAWLING COMPLETED. \n");
+
+    const pages = await Pages2.find();
+    //console.log(pages);
+
+    // Generate adjacency matrix
+    const adjacencyMatrix = generateAdjacencyMatrix2(pages);
+
+    // Calculate PageRank values
+    const x0 = calculatePageRank2(adjacencyMatrix);
+
+    // Update pages in the database with their PageRank scores
+    for (let i = 0; i < pages.length; i++) {
+        pages[i].pr = x0.get(0, i);
+        await pages[i].save(); // Save the updated page with the PageRank score
+    }
+
+    // Sort pages based on PageRank values
+    const rankedPages = pages
+        .filter(page => page.pr !== undefined && page.pr !== null) // Filter out undefined or null values
+        .sort((a, b) => b.pr - a.pr);
+    //console.log(pages);
+    // Print top 25 pages with their ranks and URLs
+    //console.log("Top 25 Pages by PageRank:");
+    for (let i = 0; i < 25; i++) {
+        console.log(`#${i + 1}. (${rankedPages[i].pr.toFixed(10)}) ${rankedPages[i].url}`);
+    }
+
+
+    console.log(index2);
     // Start the express server after crawling and PageRank calculation is completed
     app.listen(port);
     console.log("Listening on port 3001.");

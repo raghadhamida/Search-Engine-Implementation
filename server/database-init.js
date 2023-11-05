@@ -1,4 +1,3 @@
-
 //Import mongoose module
 import pkg from 'mongoose';
 
@@ -6,6 +5,7 @@ const { connect, connection } = pkg;
 
 //importing collections
 import Pages from './collections/pages.js';
+import Pages2 from './collections/pages2.js';
 
 //loading the data
 const loadData = async () => {
@@ -17,6 +17,7 @@ const loadData = async () => {
 	await connection.dropDatabase();
 
 	await Pages.create();
+    await Pages2.create();
 
 }
 
@@ -27,4 +28,3 @@ loadData()
  	connection.close();
   })
   .catch(err => console.log(err));
-
