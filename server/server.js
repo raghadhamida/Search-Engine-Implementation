@@ -122,10 +122,15 @@ app.get("/search", async (req, res, next) => {
 });
 
 //Getting one page
-app.get("/page", async (req, res) => {
+app.get("/fruitpage", async (req, res) => {
     try{
         let pageURL = req.query.url;
-
+        Pages.findOne({url: pageURL})
+        .then((resultPage) => {
+            console.log(resultPage);
+            res.status(200);
+            res.send(resultPage);
+        });
     } catch (err) {
         console.log("Error with page search: ", err);
         res.status(500);

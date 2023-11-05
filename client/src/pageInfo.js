@@ -1,7 +1,8 @@
 import { Container } from '@mui/material'
 import React from 'react'
 
-const pageInfo = ({page}) => {
+const PageInfo = ({page}) => {
+  console.log(page);
   return (
     <Container>
         <h1>{page.title}</h1>
@@ -13,4 +14,4 @@ const pageInfo = ({page}) => {
   )
 }
 
-export default pageInfo
+export default PageInfo

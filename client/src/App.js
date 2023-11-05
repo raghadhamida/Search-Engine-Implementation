@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import {Box, Button, Container, FormControlLabel, Stack, Switch, TextField} from "@mui/material";
 import SearchResultsTable from './SearchResultsTable';
-import pageInfo from './pageInfo';
+import PageInfo from './PageInfo';
 
 function App() {
   //Display settings
@@ -17,9 +17,16 @@ function App() {
 
   //Handling link click
   const handleLinkClick = (pageURL) => {
-
-    setPageToShow();
-    setShowPage(true);
+    try{
+      fetch(`http://localhost:3001/fruitpage?url=${pageURL}`)
+      .then((res) => res.json())
+      .then((page) => {
+        setPageToShow(page);
+        setShowPage(true);
+      });
+    } catch (err) {
+      console.error('Error with single fruit page search: ', err);
+    }
   }
   
   //Handling button clicks
@@ -58,7 +65,7 @@ function App() {
         </Container>
         {/*Search results display*/}
       <Box height='90%' sx={{outline: 'dashed 1px', overflow: 'auto'}} margin={1} alignContent={'center'}>
-        <div>{showPage ? <pageInfo /> : <SearchResultsTable results={dispMsg} urlClicked={handleLinkClick}/>}</div>
+        <div>{showPage ? <PageInfo page={pageToShow}/> : <SearchResultsTable results={dispMsg} urlClicked={handleLinkClick}/>}</div>
       </Box>
       </Box>
     </div>
