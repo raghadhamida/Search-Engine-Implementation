@@ -67,10 +67,10 @@ app.get("/search", async (req, res, next) => {
         // const boost = req.query.boost === 'true'; // Check if boosting is enabled
         // const limit = parseInt(req.query.limit) || 10; // Get the limit parameter and default to 10 if not provided
         
-        let searchQuery = req.body.q;
-        const boost = req.body.b === 'true';
-        const limit = parseInt(req.body.l) || 10;
-        
+        let searchQuery = req.query.q;
+        const boost = req.query.boost === 'true';
+        const limit = parseInt(req.query.limit) || 10;
+
         let indexResults = index.search(searchQuery, {}).slice(0, limit);
         let numberOfResultsToFetch = limit - indexResults.length;
 
@@ -87,6 +87,7 @@ app.get("/search", async (req, res, next) => {
 
                 return {
                     title: page.title,
+                    url: page.url,
                     content: page.content,
                     pr: page.pr,
                     searchScore: searchScore,
@@ -117,6 +118,17 @@ app.get("/search", async (req, res, next) => {
     } catch (err) {
         console.log("Error processing search request: " + err);
         res.status(500).send('Internal server error.');
+    }
+});
+
+//Getting one page
+app.get("/page", async (req, res) => {
+    try{
+        let pageURL = req.query.url;
+
+    } catch (err) {
+        console.log("Error with page search: ", err);
+        res.status(500);
     }
 });
 

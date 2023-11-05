@@ -1,16 +1,30 @@
 import { useState } from 'react';
 import './App.css';
 import {Box, Button, Container, FormControlLabel, Stack, Switch, TextField} from "@mui/material";
+import SearchResultsTable from './SearchResultsTable';
+import pageInfo from './pageInfo';
 
 function App() {
+  //Display settings
+  const [showPage, setShowPage] = useState(false);
+
   //Keeping track of all the search values
   const [searchTerm, setSearchTerm] = useState('');
   const [limit, setLimit] = useState(10);
   const [boost, setBoost] = useState(false);
   const [dispMsg, setMsg] = useState('');
+  const [pageToShow, setPageToShow] = useState('');
 
+  //Handling link click
+  const handleLinkClick = (pageURL) => {
+
+    setPageToShow();
+    setShowPage(true);
+  }
+  
   //Handling button clicks
   const handleFruitsClick = () => {
+    setShowPage(false);
     handleSearch();
   }
 
@@ -23,7 +37,7 @@ function App() {
     try{
       fetch(`http://localhost:3001/search?q=${searchTerm}&boost=${boost}&limit=${limit}`)
       .then((res) => res.json())
-      .then((data) => setMsg(JSON.stringify(data)))
+      .then((data) => setMsg(data))
     } catch (error) {
       console.error('Error with FRUITS search: ', error);
     }
@@ -43,8 +57,8 @@ function App() {
           </Stack>
         </Container>
         {/*Search results display*/}
-      <Box height='90%' sx={{outline: 'dashed 1px', overflow: 'auto'}} margin={1}>
-        <div>{dispMsg}</div>
+      <Box height='90%' sx={{outline: 'dashed 1px', overflow: 'auto'}} margin={1} alignContent={'center'}>
+        <div>{showPage ? <pageInfo /> : <SearchResultsTable results={dispMsg} urlClicked={handleLinkClick}/>}</div>
       </Box>
       </Box>
     </div>
