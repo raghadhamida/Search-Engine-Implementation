@@ -61,18 +61,31 @@ const c2 = new crawler({
 
 
                 for (const outgoingLink of outgoingLinks) {
-                    if (pagesQueue.size < 9 && !pagesQueue.has(outgoingLink) && outgoingLink != main){
+                    if (pagesQueue.size < 100 && !pagesQueue.has(outgoingLink) && outgoingLink != main){
                         //console.log("Outgoinglink is added to queue: " + outgoingLink);
                         c2.queue(outgoingLink);
                         pagesQueue.add(outgoingLink);
                     }
     
                     try {
-                        await Pages2.findOneAndUpdate(
-                            { url: outgoingLink },
-                            { $addToSet: { incomingLinks: url } },
-                            { upsert: true })
-                            //console.log(url + " added to list of incoming links of " + outgoingLink);
+                        const existingPage = await Pages2.findOne({url: outgoingLink});
+                        if(existingPage){
+                            if(existingPage.incomingLinks.length >= 50){
+                                break;
+                            }
+                            await Pages2.findOneAndUpdate(
+                                { url: outgoingLink },
+                                { $addToSet: { incomingLinks: url } },
+                                { upsert: true })
+                                //console.log(url + " added to list of incoming links of " + outgoingLink);
+                            }
+                        else {
+                            const newPage = Pages2({
+                                url: outgoingLink,
+                                incomingLinks: [url]
+                            });
+                            await newPage.save();
+                        }
                     } catch (err) {
                         console.log("Error updating incomingLinks: " + err);
                     }
@@ -97,17 +110,17 @@ const c2 = new crawler({
                     console.log("Error creating/updating document for " + url + ": " + err);
                 }
 
-                // //clean up db 
-                // if (crawledPages.size == 600){
-                //     console.log("Crawling done.");
-                //     Pages2.deleteMany({ title: { $in: [null, ""] } })
-                //     .then(deletedDocs => {
-                //         console.log("Deleted " + deletedDocs.deletedCount + " wikis without a title.");
-                //     })
-                //     .catch(err => {
-                //         console.error('Error deleting wikis without a title:', err);
-                //     });
-                // }
+                //clean up db 
+                if (crawledPages.size == 504){
+                    console.log("Crawling done.");
+                    Pages2.deleteMany({ title: { $in: [null, ""] } })
+                    .then(deletedDocs => {
+                        console.log("Deleted " + deletedDocs.deletedCount + " wikis without a title.");
+                    })
+                    .catch(err => {
+                        console.error('Error deleting wikis without a title:', err);
+                    });
+                }
 
             }
             
@@ -125,7 +138,7 @@ c2.on("error", function (error) {
 function generateAdjacencyMatrix2(pages) {
     //console.log(pages);
     const n = pages.length;
-    console.log("Number of pages:", n);
+    //console.log("Number of pages:", n);
     const adjacencyMatrix = Matrix.zeros(n, n);
     
     //console.log("Adjacency Matrix:", adjacencyMatrix);
@@ -184,7 +197,7 @@ function calculatePageRank2(adjacencyMatrix, alpha = 0.1, epsilon = 0.0001) {
         }
     }
 
-    console.log(adjacencyMatrix);
+    //console.log(adjacencyMatrix);
 
     //implementation of the power iteration
     let iteration = 1;

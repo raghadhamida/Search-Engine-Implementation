@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 import cors from 'cors';
 let app = express();
 app.use(cors());
@@ -68,28 +68,39 @@ app.get("/fruits", async (req, res, next) => {
 //serve GET request for /search
 app.get("/search", async (req, res, next) => {
     try {
-        // let searchQuery = req.query.q || '';
-        // const boost = req.query.boost === 'true'; // Check if boosting is enabled
-        // const limit = parseInt(req.query.limit) || 10; // Get the limit parameter and default to 10 if not provided
-        
         let searchQuery = req.query.q;
         const boost = req.query.boost === 'true';
         const limit = parseInt(req.query.limit) || 10;
+        const type = req.query.type;
 
-        let indexResults = index.search(searchQuery, {}).slice(0, limit);
+        let indexToUse;
+        if(type == "fruit"){
+            indexToUse = index;
+        }
+        else if(type == "personal"){
+            indexToUse = index2;
+        }
+
+        console.log(indexToUse);
+        let indexResults = indexToUse.search(searchQuery, {}).slice(0, limit);
         let numberOfResultsToFetch = limit - indexResults.length;
 
         // Fetch more results if needed to fulfill the limit
         if (numberOfResultsToFetch > 0) {
-            const additionalResults = index.search(searchQuery, {}).slice(limit, limit + numberOfResultsToFetch);
+            const additionalResults = indexToUse.search(searchQuery, {}).slice(limit, limit + numberOfResultsToFetch);
             indexResults = indexResults.concat(additionalResults);
         }
 
         let modifiedResults = indexResults.map(async (indexResult) => {
             try {
-                let page = await Pages.findById(indexResult.ref);
+                let page;
+                if(type == "fruit"){
+                    page = await Pages.findById(indexResult.ref);
+                }
+                else if(type == "personal"){
+                    page = await Pages2.findById(indexResult.ref);
+                }
                 let searchScore = boost ? indexResult.score * page.pr : indexResult.score;
-
                 return {
                     title: page.title,
                     url: page.url,
@@ -113,13 +124,8 @@ app.get("/search", async (req, res, next) => {
             finalResults.sort((a, b) => b.score - a.score);
         }
         
-        console.log(finalResults);
         res.json(finalResults);
         res.status(200);
-        // res.format({
-        //     "text/html": () => {res.status(200).render("searchResults.pug", {results: finalResults})},
-        //     "application/json": () => {res.status(200).json(finalResults)}
-        // });
     } catch (err) {
         console.log("Error processing search request: " + err);
         res.status(500).send('Internal server error.');
@@ -127,10 +133,20 @@ app.get("/search", async (req, res, next) => {
 });
 
 //Getting one page
-app.get("/fruitpage", async (req, res) => {
+app.get("/page", async (req, res) => {
     try{
         let pageURL = req.query.url;
-        Pages.findOne({url: pageURL})
+        let type = req.query.type;
+        
+        let ps;
+        if(type == "fruit"){
+            ps = Pages;
+        }
+        else {
+            ps = Pages2;
+        }
+
+        ps.findOne({url: pageURL})
         .then((resultPage) => {
             console.log(resultPage);
             res.status(200);
@@ -171,12 +187,6 @@ c.on('drain',async function(){
     for (let i = 0; i < 25; i++) {
         console.log(`#${i + 1}. (${rankedPages[i].pr.toFixed(10)}) ${rankedPages[i].url}`);
     }
-
-
-
-    // // Start the express server after crawling and PageRank calculation is completed
-    // app.listen(port);
-    // console.log("Listening on port 3001.");
 });
 
 //Wiki drain
@@ -202,7 +212,6 @@ c2.on('drain',async function(){
     const rankedPages = pages
         .filter(page => page.pr !== undefined && page.pr !== null) // Filter out undefined or null values
         .sort((a, b) => b.pr - a.pr);
-    //console.log(pages);
     // Print top 25 pages with their ranks and URLs
     //console.log("Top 25 Pages by PageRank:");
     for (let i = 0; i < 25; i++) {
@@ -214,4 +223,28 @@ c2.on('drain',async function(){
     // Start the express server after crawling and PageRank calculation is completed
     app.listen(port);
     console.log("Listening on port 3001.");
+    putReq(); //Send put request
 });
+
+const putReq = () => {
+    fetch('http://134.117.130.17:3000/searchengines', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: {
+            request_url : "" //ENTER URL HERE******
+        }
+    })
+    .then(res => {
+        if(res.ok){
+            console.log('PUT request successful.');
+        }
+        else{
+            console.error('PUT request FAILED: ' + response.status);
+        }
+    })
+    .catch(err => {
+        console.error('Request Failed: ' + err);
+    });
+}

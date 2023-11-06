@@ -14,11 +14,12 @@ function App() {
   const [boost, setBoost] = useState(false);
   const [dispMsg, setMsg] = useState('');
   const [pageToShow, setPageToShow] = useState('');
+  const [typeOfSearch, setTypeOfSearch] = useState('fruit');
 
   //Handling link click
   const handleLinkClick = (pageURL) => {
     try{
-      fetch(`http://localhost:3001/fruitpage?url=${pageURL}`)
+      fetch(`http://localhost:3001/page?url=${pageURL}&type=${typeOfSearch}`)
       .then((res) => res.json())
       .then((page) => {
         setPageToShow(page);
@@ -31,20 +32,24 @@ function App() {
   
   //Handling button clicks
   const handleFruitsClick = () => {
-    setShowPage(false);
-    handleSearch();
+    setTypeOfSearch("fruit");
+    handleSearch("fruit");
   }
 
   const handlePersonalClick = () => {
-    console.log("PERSONAL SEARCH INITIATED");
+    setTypeOfSearch("personal");
+    handleSearch("personal");
   }
 
   //Handling search (GET request)
-  const handleSearch = async () => {
+  const handleSearch = async (t) => {
     try{
-      fetch(`http://localhost:3001/search?q=${searchTerm}&boost=${boost}&limit=${limit}`)
+      fetch(`http://localhost:3001/search?q=${searchTerm}&boost=${boost}&limit=${limit}&type=${t}`)
       .then((res) => res.json())
-      .then((data) => setMsg(data))
+      .then((data) => {
+        setMsg(data);
+        setShowPage(false);
+      })
     } catch (error) {
       console.error('Error with FRUITS search: ', error);
     }
@@ -65,7 +70,7 @@ function App() {
         </Container>
         {/*Search results display*/}
       <Box height='90%' sx={{outline: 'dashed 1px', overflow: 'auto'}} margin={1} alignContent={'center'}>
-        <div>{showPage ? <PageInfo page={pageToShow}/> : <SearchResultsTable results={dispMsg} urlClicked={handleLinkClick}/>}</div>
+        <div>{showPage ? <PageInfo page={pageToShow} type={typeOfSearch}/> : <SearchResultsTable results={dispMsg} urlClicked={handleLinkClick}/>}</div>
       </Box>
       </Box>
     </div>

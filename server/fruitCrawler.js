@@ -109,7 +109,7 @@ c.on("error", function (error) {
 function generateAdjacencyMatrix(pages) {
     //console.log(pages);
     const n = pages.length;
-    console.log("Number of pages:", n);
+    //console.log("Number of pages:", n);
     const adjacencyMatrix = Matrix.zeros(n, n);
     
     //console.log("Adjacency Matrix:", adjacencyMatrix);
