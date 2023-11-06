@@ -61,7 +61,7 @@ const c2 = new crawler({
 
 
                 for (const outgoingLink of outgoingLinks) {
-                    if (pagesQueue.size < 100 && !pagesQueue.has(outgoingLink) && outgoingLink != main){
+                    if (pagesQueue.size < 500 && !pagesQueue.has(outgoingLink) && outgoingLink != main){
                         //console.log("Outgoinglink is added to queue: " + outgoingLink);
                         c2.queue(outgoingLink);
                         pagesQueue.add(outgoingLink);
@@ -70,7 +70,7 @@ const c2 = new crawler({
                     try {
                         const existingPage = await Pages2.findOne({url: outgoingLink});
                         if(existingPage){
-                            if(existingPage.incomingLinks.length >= 50){
+                            if(existingPage.incomingLinks.length >= 5){
                                 break;
                             }
                             await Pages2.findOneAndUpdate(
@@ -111,14 +111,13 @@ const c2 = new crawler({
                 }
 
                 //clean up db 
-                if (crawledPages.size == 504){
-                    console.log("Crawling done.");
+                if (crawledPages.size == 500){
                     Pages2.deleteMany({ title: { $in: [null, ""] } })
                     .then(deletedDocs => {
-                        console.log("Deleted " + deletedDocs.deletedCount + " wikis without a title.");
+                        console.log("Deleted " + deletedDocs.deletedCount + " pages with no title.");
                     })
                     .catch(err => {
-                        console.error('Error deleting wikis without a title:', err);
+                        console.error('Error deleting pages with no title:', err);
                     });
                 }
 

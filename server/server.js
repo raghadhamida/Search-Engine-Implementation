@@ -58,13 +58,6 @@ c.queue('https://people.scs.carleton.ca/~davidmckenney/fruitgraph/N-0.html');
 //Queue a URL, which starts the crawl WIKI
 c2.queue("https://en.wikipedia.org/wiki/Jordan");
 
-//serve GET request for /fruits
-app.get("/fruits", async (req, res, next) => {
-    //res.status(200).render("search.pug", {web: "Fruits Web Page"});
-    res.json({message: 'reached'});
-    res.status(200);
-});
-
 //serve GET request for /search
 app.get("/search", async (req, res, next) => {
     try {
@@ -233,7 +226,7 @@ const putReq = () => {
             'Content-Type': 'application/json'
         },
         body: {
-            request_url : "" //ENTER URL HERE******
+            request_url : "http://134.117.135.155:3001"
         }
     })
     .then(res => {
@@ -245,6 +238,6 @@ const putReq = () => {
         }
     })
     .catch(err => {
-        console.error('Request Failed: ' + err);
+        //console.error('Request Failed: ' + err);
     });
 }
